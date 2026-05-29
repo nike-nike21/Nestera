@@ -162,18 +162,7 @@ const RecentTransactionsWidget: React.FC = () => {
   ];
 
   return (
-    <div
-      style={{
-        background:
-          "linear-gradient(180deg, rgba(4,20,22,0.85), rgba(6,18,20,0.75))",
-        border: "1px solid rgba(6,110,110,0.15)",
-        borderRadius: "18px",
-        padding: "24px",
-        color: "#e6ffff",
-        boxShadow: "0 10px 30px rgba(2,12,14,0.6)",
-        backdropFilter: "blur(6px)",
-      }}
-    >
+    <div className="relative overflow-hidden rounded-2xl p-24 pb-6 text-[#e6ffff] shadow-[0_10px_30px_rgba(2,12,14,0.6)] backdrop-blur-[6px] border border-[rgba(8,120,120,0.12)] bg-linear-to-b from-[rgba(6,18,20,0.85)] to-[rgba(4,12,14,0.75)]">
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-lg font-bold text-[#dff]">Recent Transactions</h2>
       </div>
@@ -193,7 +182,7 @@ const RecentTransactionsWidget: React.FC = () => {
         </a>
       </div>
 
-      <style jsx>{`
+      <style>{`
         .custom-scrollbar::-webkit-scrollbar {
           width: 6px;
         }

@@ -15,7 +15,7 @@ const MultiAssetSection: React.FC = () => {
     <section className="w-full py-24 bg-[#040f0f] relative overflow-hidden">
       <div
         className="pointer-events-none absolute bottom-0 right-0 w-[600px] h-[500px]"
-        style={{ background: 'radial-gradient(ellipse at bottom right, rgba(0,180,160,0.07) 0%, transparent 70%)' }}
+        style={{ background: "radial-gradient(ellipse at bottom right, rgba(0,180,160,0.07) 0%, transparent 70%)" }}
       />
 
       <div className="relative z-10 max-w-[1200px] mx-auto px-12 max-md:px-6">

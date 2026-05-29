@@ -10,7 +10,7 @@ const FeaturesHero: React.FC = () => {
       {/* Background glows */}
       <div
         className="pointer-events-none absolute top-0 left-1/2 -translate-x-1/2 w-[900px] h-[500px] rounded-full"
-        style={{ background: 'radial-gradient(ellipse at center, rgba(0,212,192,0.08) 0%, transparent 70%)' }}
+        style={{ background: "radial-gradient(ellipse at center, rgba(0,212,192,0.08) 0%, transparent 70%)" }}
       />
 
       <div className="relative z-10 max-w-[1200px] mx-auto px-12 max-md:px-6 flex flex-col items-center text-center gap-6">

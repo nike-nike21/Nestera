@@ -39,7 +39,7 @@ const GoalToolsSection: React.FC = () => {
     <section className="w-full py-24 bg-[#061a1a] relative overflow-hidden">
       <div
         className="pointer-events-none absolute -top-16 left-1/4 w-[700px] h-[400px]"
-        style={{ background: 'radial-gradient(ellipse, rgba(139,92,246,0.06) 0%, transparent 70%)' }}
+        style={{ background: "radial-gradient(ellipse, rgba(139,92,246,0.06) 0%, transparent 70%)" }}
       />
 
       <div className="relative z-10 max-w-[1200px] mx-auto px-12 max-md:px-6">

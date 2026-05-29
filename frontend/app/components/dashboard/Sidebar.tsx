@@ -58,11 +58,10 @@ const Sidebar: React.FC = () => {
 
       <aside
         aria-label="Sidebar"
-        style={{ width: 200, minWidth: 180 }}
         className={[
-          "fixed left-0 top-0 z-50 h-screen",
-          "flex flex-col border-r border-[var(--color-border)]",
-          "bg-[var(--color-sidebar)] text-[var(--color-text)]",
+          "fixed left-0 top-0 h-screen z-50 w-50 min-w-45",
+          "flex flex-col",
+          "bg-[#0d1f28] text-[#d6f6f6]",
           "transition-transform duration-250 ease-in-out",
           open ? "translate-x-0" : "-translate-x-full md:translate-x-0",
         ].join(" ")}
@@ -94,7 +93,6 @@ const Sidebar: React.FC = () => {
                 key={link.href}
                 href={link.href}
                 onClick={() => setOpen(false)}
-                style={{ padding: "11px 12px", fontSize: 14 }}
                 className={[
                   "relative flex items-center rounded-xl font-medium no-underline",
                   active

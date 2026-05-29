@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { Users, Copy, Check, Trophy, Gift, TrendingUp } from "lucide-react";
+import { env } from "../../lib/env";
 
 const REFERRED_USERS = [
   { name: "Alice K.", joined: "Apr 20, 2026", status: "Active", reward: "$12.00" },
@@ -18,7 +19,7 @@ const LEADERBOARD = [
   { rank: 5, name: "0x12...9c", referrals: 3, earned: "$24" },
 ];
 
-const REFERRAL_LINK = "https://nestera.app/ref/0x4a8f";
+const REFERRAL_LINK = `${env.baseUrl}/ref/${process.env.NEXT_PUBLIC_DEFAULT_REFERRAL_CODE || "0x4a8f"}`;
 
 export default function ReferralsPage() {
   const [copied, setCopied] = useState(false);

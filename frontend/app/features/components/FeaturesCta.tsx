@@ -8,16 +8,11 @@ const FeaturesCta: React.FC = () => {
   return (
     <section className="w-full py-24 bg-[#040f0f]">
       <div className="max-w-[1200px] mx-auto px-12 max-md:px-6">
-        <div className="relative rounded-[32px] overflow-hidden p-16 max-md:p-10 text-center flex flex-col items-center gap-8"
-          style={{
-            background: 'linear-gradient(135deg, rgba(0,212,192,0.12) 0%, rgba(6,26,26,0) 60%)',
-            border: '1px solid rgba(0,212,192,0.15)',
-          }}
-        >
+        <div className="relative rounded-[32px] overflow-hidden p-16 max-md:p-10 text-center flex flex-col items-center gap-8 border border-[rgba(0,212,192,0.15)] bg-linear-to-br from-[rgba(0,212,192,0.12)] to-[rgba(6,26,26,0)]">
           {/* Glow blob */}
           <div
             className="pointer-events-none absolute -top-20 left-1/2 -translate-x-1/2 w-[600px] h-[300px] rounded-full blur-3xl"
-            style={{ background: 'radial-gradient(ellipse, rgba(0,212,192,0.12) 0%, transparent 70%)' }}
+            style={{ background: "radial-gradient(ellipse, rgba(0,212,192,0.12) 0%, transparent 70%)" }}
           />
 
           <div className="relative z-10 flex flex-col items-center gap-6">
