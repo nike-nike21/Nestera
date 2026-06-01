@@ -1,10 +1,10 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Wallet } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { Globe2, Menu, Wallet, X } from "lucide-react";
+import { useTranslations, useLocale } from "next-intl";
 
 interface NavLink {
   label: string;
@@ -15,7 +15,9 @@ const Navbar: React.FC = () => {
   const pathname = usePathname();
   const router = useRouter();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isLanguageMenuOpen, setIsLanguageMenuOpen] = useState(false);
   const t = useTranslations("Navbar");
+  const locale = useLocale();
 
   const navLinks: NavLink[] = [
     { label: t("features"), href: "/features" },
@@ -43,10 +45,9 @@ const Navbar: React.FC = () => {
     "text-cyan-500 bg-slate-800 border-l-cyan-500";
 
   const handleLanguageChange = (locale: string) => {
-    // Get current pathname without locale
     const currentPath = pathname.replace(/^\/[a-z]{2}/, "") || "/";
-    // Navigate to the same path with new locale
-    router.push(`/(${locale})${currentPath}`);
+    setIsLanguageMenuOpen(false);
+    router.push(`/${locale}${currentPath}`);
   };
 
   return (
@@ -88,28 +89,22 @@ const Navbar: React.FC = () => {
               type="button"
               className="hidden sm:inline-flex items-center justify-center py-3 px-6 rounded-full bg-[#00c9c8] text-[#061a1a] font-semibold text-sm border-none cursor-pointer shadow-[0_10px_15px_-3px_rgba(0,212,192,0.1)] transition-all duration-200 hover:shadow-[0_10px_15px_-3px_rgba(0,212,192,0.5)] hover:scale-105"
             >
-              Connect Wallet
+              {t("connectWallet")}
             </button>
 
             {/* Language Switcher */}
             <div className="relative">
               <button
-                type="button"
-                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} // Reusing mobile menu state for simplicity
-                className="inline-flex items-center px-3 py-2 rounded-md text-sm font-medium text-white hover:text-cyan-300 focus:outline-none"
-                aria-haspopup="true"
-                aria-expanded={false}
-              >
-                {t("language")}:{" "}
-                <span className="ml-1 font-semibold">
-                  {t(
-                    typeof window !== "undefined" && localStorage.getItem("NEXT_LOCALE")
-                      ? (localStorage.getItem("NEXT_LOCALE") as "en" | "es")
-                      : "en"
-                  ) === "en"
-                    ? t("english")
-                    : t("spanish")
-                  )}
+              type="button"
+              onClick={() => setIsLanguageMenuOpen((isOpen) => !isOpen)}
+              className="inline-flex items-center px-3 py-2 rounded-md text-sm font-medium text-white hover:text-cyan-300 focus:outline-none"
+              aria-label={t("language")}
+              aria-haspopup="true"
+              aria-expanded={isLanguageMenuOpen}
+            >
+                <Globe2 size={16} className="mr-2" aria-hidden="true" />
+                <span className="font-semibold">
+                  {locale === "en" ? t("english") : t("spanish")}
                 </span>
                 <svg className="ml-2 w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
                   <path fillRule="evenodd" d="M5.293 7.293a1 1 1 0 111.414 0L10 10.586l3.293-3.293a1 1 1 0 111.414 1.414l-4 4a1 1 1 0 01-1.414 0l-4-4a1 1 1 0 010-1.414z" clipRule="evenodd" />
@@ -117,7 +112,7 @@ const Navbar: React.FC = () => {
               </button>
               
               {/* Language dropdown menu */}
-              <div className="absolute right-0 mt-2 w-48 origin-top-right rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none">
+              <div className={`${isLanguageMenuOpen ? "block" : "hidden"} absolute right-0 mt-2 w-48 origin-top-right rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none`}>
                 <div className="py-1">
                   <button
                     type="button"
@@ -147,33 +142,11 @@ const Navbar: React.FC = () => {
               className="inline-flex md:hidden items-center justify-center p-2 rounded-md text-slate-400 bg-transparent border-none cursor-pointer transition-all duration-200 hover:text-white hover:bg-slate-800"
               aria-expanded={isMobileMenuOpen}
             >
-              <span className="sr-only">Open main menu</span>
+              <span className="sr-only">{t("openMenu")}</span>
               {isMobileMenuOpen ? (
-                <svg
-                  className="w-6 h-6 stroke-current stroke-2 fill-none"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
+                <X size={24} aria-hidden="true" />
               ) : (
-                <svg
-                  className="w-6 h-6 stroke-current stroke-2 fill-none"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M4 6h16M4 12h16M4 18h16"
-                  />
-                </svg>
+                <Menu size={24} aria-hidden="true" />
               )}
             </button>
           </div>
@@ -198,12 +171,12 @@ const Navbar: React.FC = () => {
               {link.label}
             </Link>
           ))}
-          <button
-            type="button"
-            className="w-full mt-4 py-3 px-6 rounded-full bg-[#00c9c8] text-[#061a1a] font-semibold text-sm border-none cursor-pointer shadow-[0_10px_15px_-3px_rgba(0,212,192,0.1)] transition-all duration-200 hover:shadow-[0_10px_15px_-3px_rgba(0,212,192,0.5)]"
-          >
-            Connect Wallet
-          </button>
+            <button
+              type="button"
+              className="w-full mt-4 py-3 px-6 rounded-full bg-[#00c9c8] text-[#061a1a] font-semibold text-sm border-none cursor-pointer shadow-[0_10px_15px_-3px_rgba(0,212,192,0.1)] transition-all duration-200 hover:shadow-[0_10px_15px_-3px_rgba(0,212,192,0.5)]"
+            >
+              {t("connectWallet")}
+            </button>
         </div>
       </div>
     </nav>

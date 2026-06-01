@@ -3,9 +3,10 @@
 import React from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { useTranslations } from "next-intl";
 import { Calendar, CircleDollarSign, Flag, Sparkles } from "lucide-react";
+import { zodFormResolver } from "../../../lib/formResolver";
+import { reportError, trackEvent } from "../../../lib/analytics";
 
 // Create validation schema
 const goalFormSchema = z.object({
@@ -32,7 +33,7 @@ export default function GoalForm() {
 
   // Create validation schema with translated messages
   const goalFormSchema = z.object({
-    goalName: z.string().min(1, formsT("required")),
+    goalName: z.string().trim().min(3, formsT("minLength", { min: 3 })).max(50, formsT("maxLength", { max: 50 })),
     category: z.string().min(1, formsT("required")),
     targetAmount: z.string().refine(val => {
       const num = parseFloat(val);
@@ -44,7 +45,7 @@ export default function GoalForm() {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       return date >= today;
-    }, t("targetDate") + " " + formsT("required")), // Custom message for date
+    }, formsT("futureDate")),
   });
 
   type GoalFormValues = z.infer<typeof goalFormSchema>;
@@ -52,9 +53,10 @@ export default function GoalForm() {
   const {
     register,
     handleSubmit,
-    formState: { errors, isSubmitting, isSuccess },
+    formState: { errors, isSubmitting, isSubmitSuccessful },
   } = useForm<GoalFormValues>({
-    resolver: zodResolver(goalFormSchema),
+    resolver: zodFormResolver(goalFormSchema),
+    mode: "onChange",
     defaultValues: {
       goalName: "",
       category: "General",
@@ -63,11 +65,14 @@ export default function GoalForm() {
     },
   });
 
-  const onSubmit = (data: GoalFormValues) => {
-    console.log("Form submitted:", data);
-    // Backend creation endpoint is not wired in this repo yet.
-    // We still provide a complete UI and validate inputs client-side.
-    // For demo purposes, we'll simulate success
+  const onSubmit = async (data: GoalFormValues) => {
+    try {
+      console.log("Form submitted:", data);
+      await Promise.resolve();
+      trackEvent("form_submit_succeeded", { form: "goal" });
+    } catch (error) {
+      reportError(error, { form: "goal" });
+    }
   };
 
   return (
@@ -78,10 +83,10 @@ export default function GoalForm() {
             <div className="flex items-start justify-between gap-4 mb-6">
               <div>
                 <h2 className="text-xl md:text-2xl font-bold text-white m-0 tracking-tight">
-                  {t("goals.createGoal")}
+                  {t("createGoal")}
                 </h2>
                 <p className="text-[#6a8a93] text-sm m-0 mt-2">
-                  {t("goals.tips.realisticTimeline")}
+                  {t("tips.realisticTimeline")}
                 </p>
               </div>
               <div className="shrink-0 w-11 h-11 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-300">
@@ -95,13 +100,13 @@ export default function GoalForm() {
             >
               <div>
                 <label className="block text-sm font-semibold text-white mb-2">
-                  {t("goals.goalName")}
+                  {t("goalName")}
                 </label>
                 <div className="relative">
                   <Flag className="absolute left-4 top-1/2 -translate-y-1/2 text-[#5e8c96]" size={18} />
                   <input
                     {...register("goalName")}
-                    placeholder={t("goals.goalNamePlaceholder")}
+                    placeholder={t("goalNamePlaceholder")}
                     className={`w-full bg-[#0e2330] border border-white/5 rounded-xl py-3 pl-12 pr-4 text-white placeholder:text-[#4e7a86] focus:outline-hidden focus:border-cyan-500/50 transition-colors ${
                       errors.goalName ? "border-red-500" : ""
                     }`}
@@ -120,7 +125,7 @@ export default function GoalForm() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div>
                   <label className="block text-sm font-semibold text-white mb-2">
-                    {t("goals.category")}
+                    {t("category")}
                   </label>
                   <select
                     {...register("category")}
@@ -145,7 +150,7 @@ export default function GoalForm() {
 
                 <div>
                   <label className="block text-sm font-semibold text-white mb-2">
-                    {t("goals.targetAmount")}
+                    {t("targetAmount")}
                   </label>
                   <div className="relative">
                     <CircleDollarSign
@@ -155,7 +160,7 @@ export default function GoalForm() {
                     <input
                       {...register("targetAmount")}
                       inputMode="decimal"
-                      placeholder={t("goals.targetAmountPlaceholder")}
+                      placeholder={t("targetAmountPlaceholder")}
                       className={`w-full bg-[#0e2330] border border-white/5 rounded-xl py-3 pl-12 pr-4 text-white placeholder:text-[#4e7a86] focus:outline-hidden focus:border-cyan-500/50 transition-colors ${
                         errors.targetAmount ? "border-red-500" : ""
                       }`}
@@ -174,7 +179,7 @@ export default function GoalForm() {
 
               <div>
                 <label className="block text-sm font-semibold text-white mb-2">
-                  {t("goals.targetDate")}
+                  {t("targetDate")}
                 </label>
                 <div className="relative">
                   <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 text-[#5e8c96]" size={18} />
@@ -196,10 +201,10 @@ export default function GoalForm() {
                 )}
               </div>
 
-              {isSuccess && (
+              {isSubmitSuccessful && (
                 <div className="rounded-2xl border border-emerald-500/25 bg-emerald-500/10 px-4 py-3">
                   <p className="text-emerald-300 text-sm font-semibold m-0">
-                    {t("goals.success")}
+                    {t("success")}
                   </p>
                 </div>
               )}
@@ -210,10 +215,10 @@ export default function GoalForm() {
                   className="px-5 py-3 bg-cyan-500 hover:bg-cyan-400 text-[#061a1a] font-bold rounded-2xl transition-all shadow-[0_10px_20px_rgba(0,212,192,0.2)] active:scale-95 disabled:opacity-50"
                   disabled={isSubmitting}
                 >
-                  {isSubmitting ? t("goals.creating") : t("goals.create")}
+                  {isSubmitting ? t("creating") : t("create")}
                 </button>
                 <p className="text-[#6a8a93] text-xs m-0">
-                  {t("goals.tips.startSmall")}
+                  {t("tips.startSmall")}
                 </p>
               </div>
             </form>
@@ -223,22 +228,22 @@ export default function GoalForm() {
         <div className="lg:col-span-5">
           <div className="rounded-3xl border border-white/5 bg-[#0e2330] p-6 md:p-7">
             <h3 className="text-white font-bold text-lg m-0">
-              {t("goals.tips.title")}
+              {t("tips.title")}
             </h3>
             <ul className="mt-4 space-y-3 text-sm text-[#6a8a93]">
               <li>
                 <span className="text-white font-semibold">
-                  {t("goals.tips.realisticTimeline")}
+                  {t("tips.realisticTimeline")}
                 </span>
               </li>
               <li>
                 <span className="text-white font-semibold">
-                  {t("goals.tips.startSmall")}
+                  {t("tips.startSmall")}
                 </span>
               </li>
               <li>
                 <span className="text-white font-semibold">
-                  {t("goals.tips.nameClearly")}
+                  {t("tips.nameClearly")}
                 </span>
               </li>
             </ul>

@@ -3,39 +3,44 @@
 import React from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { useTranslations } from "next-intl";
-
-// Create validation schema
-const newsletterSchema = z.object({
-  email: z.string().email("Invalid email address").trim(),
-});
-
-type NewsletterFormValues = z.infer<typeof newsletterSchema>;
+import { zodFormResolver } from "../lib/formResolver";
+import { reportError, trackEvent } from "../lib/analytics";
 
 const Newsletter: React.FC = () => {
   const t = useTranslations();
-  
-  // Update the schema with translated messages
-  const translatedSchema = z.object({
-    email: z.string().email(t("forms.invalidEmail")).trim(),
+
+  const newsletterSchema = z.object({
+    email: z
+      .string()
+      .trim()
+      .min(1, t("forms.required"))
+      .email(t("forms.invalidEmail")),
   });
+  type NewsletterFormValues = z.infer<typeof newsletterSchema>;
 
   const {
     register,
     handleSubmit,
-    formState: { errors, isSubmitting, isSuccess },
+    reset,
+    formState: { errors, isSubmitting, isSubmitSuccessful },
   } = useForm<NewsletterFormValues>({
-    resolver: zodResolver(translatedSchema),
+    resolver: zodFormResolver(newsletterSchema),
+    mode: "onChange",
     defaultValues: {
       email: "",
     },
   });
 
-  const onSubmit = (data: NewsletterFormValues) => {
-    console.log("Newsletter signup:", data.email);
-    // Here you would typically send the email to your backend
-    // Reset form after successful submission
+  const onSubmit = async (data: NewsletterFormValues) => {
+    try {
+      console.log("Newsletter signup:", data.email);
+      await Promise.resolve();
+      trackEvent("form_submit_succeeded", { form: "newsletter" });
+      reset();
+    } catch (error) {
+      reportError(error, { form: "newsletter" });
+    }
   };
 
   return (
@@ -53,6 +58,7 @@ const Newsletter: React.FC = () => {
         <form
           className="flex gap-3 flex-1 justify-end min-w-[320px] max-md:flex-col max-md:justify-center"
           onSubmit={handleSubmit(onSubmit)}
+          aria-describedby={isSubmitSuccessful ? "newsletter-success" : undefined}
         >
           <div className="flex-1 max-w-[400px] max-md:max-w-full">
             <input
@@ -67,7 +73,7 @@ const Newsletter: React.FC = () => {
               aria-describedby={errors.email ? "email-error" : undefined}
             />
             {errors.email && (
-              <p id="email-error" className="text-xs text-red-500 mt-1">
+              <p id="email-error" className="text-xs text-red-500 mt-1" role="alert">
                 {errors.email.message}
               </p>
             )}
@@ -79,8 +85,8 @@ const Newsletter: React.FC = () => {
           >
             {isSubmitting ? t("Newsletter.submit") + "..." : t("Newsletter.submit")}
           </button>
-          {isSuccess && (
-            <p className="mt-2 text-xs text-green-500">
+          {isSubmitSuccessful && (
+            <p id="newsletter-success" className="mt-2 text-xs text-green-500" role="status">
               {t("Newsletter.success")}
             </p>
           )}
