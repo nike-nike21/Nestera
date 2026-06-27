@@ -37,6 +37,8 @@ export class AdminController {
 
   @Patch('users/:id/kyc/approve')
   @ApiOperation({ summary: 'Approve KYC for a user' })
+  @ApiResponse({ status: 200, description: 'KYC approved' })
+  @ApiResponse({ status: 400, description: 'User ID is required' })
   @ApiParam({ name: 'id', description: 'User UUID' })
   @ApiResponse({ status: 200, description: 'KYC approved' })
   @ApiResponse({ status: 400, description: 'Missing user ID' })
@@ -52,6 +54,11 @@ export class AdminController {
 
   @Patch('users/:id/kyc/reject')
   @ApiOperation({ summary: 'Reject KYC for a user' })
+  @ApiResponse({ status: 200, description: 'KYC rejected' })
+  @ApiResponse({
+    status: 400,
+    description: 'User ID or rejection reason missing',
+  })
   @ApiParam({ name: 'id', description: 'User UUID' })
   @ApiResponse({ status: 200, description: 'KYC rejected' })
   @ApiResponse({ status: 400, description: 'Missing user ID or rejection reason' })
@@ -69,6 +76,12 @@ export class AdminController {
   }
 
   @Patch('users/:id/kyc')
+  @ApiOperation({ summary: 'Update KYC status (approve or reject)' })
+  @ApiResponse({ status: 200, description: 'KYC status updated' })
+  @ApiResponse({
+    status: 400,
+    description: 'Invalid action or missing parameters',
+  })
   @ApiOperation({
     summary: 'Approve or reject KYC for a user (single endpoint)',
     description: 'Set `action` to `"approve"` or `"reject"`. Reason is required for rejection.',

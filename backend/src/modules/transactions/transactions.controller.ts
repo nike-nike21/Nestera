@@ -97,6 +97,9 @@ export class TransactionsController {
   }
 
   @Post(':id/tag')
+  @ApiOperation({ summary: 'Add or update tags on a transaction' })
+  @ApiResponse({ status: 201, description: 'Transaction tagged' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiOperation({ summary: 'Tag a transaction with a label or category' })
   @ApiParam({ name: 'id', description: 'Transaction UUID' })
   @ApiBody({ type: TagTransactionDto })
@@ -112,6 +115,10 @@ export class TransactionsController {
   }
 
   @Get('categories')
+  @ApiOperation({
+    summary: 'List transaction categories for the authenticated user',
+  })
+  @ApiResponse({ status: 200, description: 'List of categories' })
   @ApiOperation({ summary: 'List all transaction categories used by the authenticated user' })
   @ApiResponse({ status: 200, description: 'List of category strings' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
@@ -120,6 +127,7 @@ export class TransactionsController {
   }
 
   @Post('tags/bulk')
+  @ApiOperation({ summary: 'Bulk-tag multiple transactions' })
   @ApiOperation({
     summary: 'Bulk tag multiple transactions at once',
     description: 'Apply tags/categories to a list of transaction IDs in a single request.',

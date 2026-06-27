@@ -187,6 +187,11 @@ The API supports URI-based versioning (\`/api/v1/...\` and \`/api/v2/...\`).
           : `Nestera decentralized savings & investment platform API.\n\n${rateLimitDescription}`,
       )
       .setVersion(version)
+      .addBearerAuth()
+      .addApiKey(
+        { type: 'apiKey', name: 'X-API-Version', in: 'header' },
+        'api-version',
+      )
       .setContact('Nestera', 'https://nestera.io', 'support@nestera.io')
       .setLicense('MIT', 'https://opensource.org/licenses/MIT')
       .addBearerAuth(
@@ -214,6 +219,22 @@ The API supports URI-based versioning (\`/api/v1/...\` and \`/api/v2/...\`).
     });
   }
 
+  // Combined Swagger doc at /api/docs
+  const combinedConfig = new DocumentBuilder()
+    .setTitle('Nestera API')
+    .setDescription(
+      'Nestera platform API — all versions. ' +
+        'Use the versioned docs at /api/v1/docs or /api/v2/docs for version-specific views.',
+    )
+    .setVersion(CURRENT_VERSION)
+    .addBearerAuth()
+    .build();
+  const combinedDoc = SwaggerModule.createDocument(app, combinedConfig);
+  SwaggerModule.setup('api/docs', app, combinedDoc);
+
+  app.enableShutdownHooks();
+
+  const server = await app.listen(port || 3001);
   // Redirect /api/docs → /api/v2/docs for convenience
   const expressApp = app.getHttpAdapter().getInstance();
   expressApp.get(
@@ -233,6 +254,17 @@ The API supports URI-based versioning (\`/api/v1/...\` and \`/api/v2/...\`).
   logger.log(
     `Swagger v1 docs (deprecated): http://localhost:${port}/api/v1/docs`,
   );
+  logger.log(`Swagger v2 docs: http://localhost:${port}/api/v2/docs`);
+
+  const gracefulShutdown = app.get(GracefulShutdownService);
+
+  const shutdown = async (signal: string) => {
+    logger.log(`Received ${signal}, starting graceful shutdown...`);
+
+    // Stop accepting new connections
+    server.close(() => {
+      logger.log('HTTP server closed — no new connections accepted');
+    });
 
   const signals: NodeJS.Signals[] = ['SIGTERM', 'SIGINT'];
   for (const signal of signals) {
@@ -249,7 +281,17 @@ The API supports URI-based versioning (\`/api/v1/...\` and \`/api/v2/...\`).
     });
   }
 
-  // Handle uncaught exceptions
+    // NestJS onApplicationShutdown hooks handle the rest:
+    // drain in-flight requests, stop workers, close DB/Redis
+    await app.close();
+
+    logger.log('Application shut down successfully');
+    process.exit(0);
+  };
+
+  process.on('SIGTERM', () => shutdown('SIGTERM'));
+  process.on('SIGINT', () => shutdown('SIGINT'));
+
   process.on('uncaughtException', (error) => {
     logger.error('Uncaught Exception:', error);
     process.exit(1);
