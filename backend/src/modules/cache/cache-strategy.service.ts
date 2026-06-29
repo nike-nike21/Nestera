@@ -14,12 +14,13 @@ interface CacheMetrics {
   misses: number;
   sets: number;
   deletes: number;
+  evictions: number;
 }
 
 @Injectable()
 export class CacheStrategyService {
   private readonly logger = new Logger(CacheStrategyService.name);
-  private metrics: CacheMetrics = { hits: 0, misses: 0, sets: 0, deletes: 0 };
+  private metrics: CacheMetrics = { hits: 0, misses: 0, sets: 0, deletes: 0, evictions: 0 };
   private resourceTTLs = new Map<string, number>([
     ['user', 5 * 60 * 1000], // 5 minutes
     ['savings', 10 * 60 * 1000], // 10 minutes
@@ -75,12 +76,17 @@ export class CacheStrategyService {
         await this.del(key.toString());
       }
 
+      this.metrics.evictions += keysToDelete.length;
       this.logger.debug(
         `Invalidated ${keysToDelete.length} keys with tag: ${tag}`,
       );
     } catch (error) {
       this.logger.error(`Cache invalidation error for tag ${tag}:`, error);
     }
+  }
+
+  incrementEvictions(count: number = 1): void {
+    this.metrics.evictions += count;
   }
 
   async warmCache(
@@ -126,15 +132,23 @@ export class CacheStrategyService {
 
   getMetrics() {
     const total = this.metrics.hits + this.metrics.misses;
+    const hitRate = total > 0 ? ((this.metrics.hits / total) * 100) : 0;
+    const missRate = total > 0 ? ((this.metrics.misses / total) * 100) : 0;
+
     return {
-      ...this.metrics,
-      hitRate:
-        total > 0 ? ((this.metrics.hits / total) * 100).toFixed(2) + '%' : '0%',
+      hits: this.metrics.hits,
+      misses: this.metrics.misses,
+      sets: this.metrics.sets,
+      deletes: this.metrics.deletes,
+      evictions: this.metrics.evictions,
+      hitRate: `${hitRate.toFixed(2)}%`,
+      missRate: `${missRate.toFixed(2)}%`,
+      totalRequests: total,
     };
   }
 
   resetMetrics() {
-    this.metrics = { hits: 0, misses: 0, sets: 0, deletes: 0 };
+    this.metrics = { hits: 0, misses: 0, sets: 0, deletes: 0, evictions: 0 };
   }
 
   setResourceTTL(resource: string, ttl: number): void {

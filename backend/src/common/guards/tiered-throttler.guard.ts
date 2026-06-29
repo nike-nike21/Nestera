@@ -145,6 +145,11 @@ export class TieredThrottlerGuard extends ThrottlerGuard {
     // Set rate limit headers on every response
     response.setHeader('X-RateLimit-Limit', tierLimits.limit);
     response.setHeader('X-RateLimit-Tier', tier);
+    response.setHeader('X-RateLimit-Remaining', tierLimits.limit - 1);
+    response.setHeader(
+      'X-RateLimit-Reset',
+      new Date(Date.now() + tierLimits.ttl).toISOString(),
+    );
 
     try {
       const result = await super.handleRequest(requestProps);
@@ -170,12 +175,14 @@ export class TieredThrottlerGuard extends ThrottlerGuard {
           timestamp: new Date(),
         });
 
+        // Set rate limit error headers
         response.setHeader('Retry-After', Math.ceil(tierLimits.ttl / 1000));
         response.setHeader('X-RateLimit-Remaining', 0);
         response.setHeader(
           'X-RateLimit-Reset',
           new Date(Date.now() + tierLimits.ttl).toISOString(),
         );
+        response.setHeader('X-RateLimit-Endpoint', `${request.method} ${request.path}`);
 
         throw new ThrottlerException(
           `Rate limit exceeded for ${tier} tier. ` +

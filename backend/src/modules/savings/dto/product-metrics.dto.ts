@@ -12,6 +12,7 @@ export class ProductMetricsQueryDto {
     enum: MetricsGranularity,
     default: MetricsGranularity.DAILY,
     description: 'Granularity of historical chart data',
+    example: MetricsGranularity.DAILY,
   })
   @IsEnum(MetricsGranularity)
   @IsOptional()
@@ -58,36 +59,66 @@ export class RiskMetricsDto {
 }
 
 export class SimilarProductDto {
-  @ApiProperty({ description: 'Product UUID' })
+  @ApiProperty({
+    example: '550e8400-e29b-41d4-a716-446655440000',
+    description: 'Product UUID',
+  })
   id: string;
 
-  @ApiProperty({ description: 'Product name' })
+  @ApiProperty({
+    example: 'Premium Fixed 12M',
+    description: 'Product name',
+  })
   name: string;
 
-  @ApiProperty({ description: 'Current APY (%)' })
+  @ApiProperty({
+    example: 9.2,
+    description: 'Current APY (%)',
+  })
   apy: number;
 
-  @ApiProperty({ description: 'Current TVL' })
+  @ApiProperty({
+    example: 850000,
+    description: 'Current TVL',
+  })
   tvl: number;
 
-  @ApiProperty({ description: 'Risk level' })
+  @ApiProperty({
+    example: 'MEDIUM',
+    description: 'Risk level',
+  })
   riskLevel: string;
 }
 
 export class ProductMetricsDto {
-  @ApiProperty({ description: 'Product UUID' })
+  @ApiProperty({
+    example: 'prod-123456',
+    description: 'Product UUID',
+  })
   productId: string;
 
-  @ApiProperty({ description: 'Product name' })
+  @ApiProperty({
+    example: 'Flexi Savings',
+    description: 'Product name',
+  })
   productName: string;
 
-  @ApiProperty({ description: 'Current APY (%)' })
+  @ApiProperty({
+    example: 8.5,
+    description: 'Current APY (%)',
+  })
   currentApy: number;
 
-  @ApiProperty({ description: 'Current TVL' })
+  @ApiProperty({
+    example: 5000000,
+    description: 'Current TVL',
+  })
   currentTvl: number;
 
-  @ApiProperty({ description: 'Total active subscribers' })
+  @ApiProperty({
+    example: 1250,
+    description: 'Total active subscribers',
+  })
   totalSubscribers: number;
 
   @ApiProperty({
@@ -118,6 +149,7 @@ export class ProductMetricsDto {
   similarProducts: SimilarProductDto[];
 
   @ApiPropertyOptional({
+    example: '2026-01-20T14:45:00.000Z',
     description: 'ISO timestamp when this response was cached',
   })
   cachedAt?: string;

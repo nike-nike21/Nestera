@@ -5,6 +5,7 @@ import {
   HttpException,
   HttpStatus,
   Logger,
+  ValidationError as NestValidationError,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
 
@@ -50,6 +51,48 @@ function isDatabaseConnectionError(exception: unknown): exception is Error {
       '08006',
     ].includes(code)
   );
+}
+
+/** Extract field path from nested validation errors */
+function extractFieldPath(
+  propertyPath: string,
+  property: string,
+): string {
+  return propertyPath ? `${propertyPath}.${property}` : property;
+}
+
+/** Format validation errors with exact field paths and constraints */
+function formatValidationErrors(
+  errors: NestValidationError[],
+  parentPath = '',
+): Array<{ field: string; message: string; constraint?: string; values?: unknown[] }> {
+  const formattedErrors: Array<{
+    field: string;
+    message: string;
+    constraint?: string;
+    values?: unknown[];
+  }> = [];
+
+  for (const error of errors) {
+    const field = extractFieldPath(parentPath, error.property);
+
+    if (error.constraints) {
+      for (const [constraint, message] of Object.entries(error.constraints)) {
+        formattedErrors.push({
+          field,
+          message,
+          constraint,
+        });
+      }
+    }
+
+    if (error.children && error.children.length > 0) {
+      const childErrors = formatValidationErrors(error.children, field);
+      formattedErrors.push(...childErrors);
+    }
+  }
+
+  return formattedErrors;
 }
 
 @Catch()
@@ -120,6 +163,13 @@ export class AllExceptionsFilter implements ExceptionFilter {
         : HttpStatus.INTERNAL_SERVER_ERROR;
 
     let message: string;
+    let validationErrors: Array<{
+      field: string;
+      message: string;
+      constraint?: string;
+      values?: unknown[];
+    }> | undefined;
+
     if (exception instanceof HttpException) {
       const exceptionResponse = exception.getResponse();
       if (typeof exceptionResponse === 'string') {
@@ -128,10 +178,18 @@ export class AllExceptionsFilter implements ExceptionFilter {
         typeof exceptionResponse === 'object' &&
         exceptionResponse !== null
       ) {
-        const msg = (exceptionResponse as Record<string, unknown>).message;
-        message = Array.isArray(msg)
-          ? msg.join('; ')
-          : String(msg ?? 'An error occurred');
+        const responseObj = exceptionResponse as Record<string, unknown>;
+        const msg = responseObj.message;
+
+        // Handle validation errors (array of ValidationError objects)
+        if (Array.isArray(msg)) {
+          validationErrors = formatValidationErrors(
+            msg as NestValidationError[],
+          );
+          message = `${validationErrors.length} validation error(s)`;
+        } else {
+          message = String(msg ?? 'An error occurred');
+        }
       } else {
         message = 'An error occurred';
       }
@@ -139,7 +197,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
       message = status >= 500 ? 'Internal server error' : 'An error occurred';
     }
 
-    const errorResponse = {
+    const errorResponse: Record<string, unknown> = {
       success: false,
       statusCode: status,
       timestamp: new Date().toISOString(),
@@ -150,6 +208,20 @@ export class AllExceptionsFilter implements ExceptionFilter {
           : message,
     };
 
+    // Attach validation errors if present
+    if (validationErrors && validationErrors.length > 0) {
+      errorResponse.errors = validationErrors;
+    }
+
+    // Attach rate limit info if present (from ThrottlerException)
+    const throttlerHeaders = this.extractThrottlerInfo(request);
+    if (throttlerHeaders && status === 429) {
+      errorResponse.retryAfter = throttlerHeaders.retryAfter;
+      errorResponse.resetTime = throttlerHeaders.resetTime;
+      errorResponse.endpoint = `${request.method} ${request.path}`;
+      errorResponse.rateLimitTier = throttlerHeaders.tier;
+    }
+
     if (status >= 500) {
       this.logger.error(
         `HTTP ${status} ${request.method} ${request.url} - ${message}`,
@@ -158,5 +230,25 @@ export class AllExceptionsFilter implements ExceptionFilter {
     }
 
     response.status(status).json(errorResponse);
+  }
+
+  private extractThrottlerInfo(request: Request): {
+    retryAfter: number;
+    resetTime: string;
+    tier: string;
+  } | null {
+    const retryAfterHeader = request.headers['x-ratelimit-retry-after'];
+    const resetHeader = request.headers['x-ratelimit-reset'];
+    const tierHeader = request.headers['x-ratelimit-tier'];
+
+    if (retryAfterHeader || resetHeader) {
+      return {
+        retryAfter: typeof retryAfterHeader === 'string' ? parseInt(retryAfterHeader, 10) : 60,
+        resetTime: typeof resetHeader === 'string' ? resetHeader : new Date(Date.now() + 60000).toISOString(),
+        tier: typeof tierHeader === 'string' ? tierHeader : 'default',
+      };
+    }
+
+    return null;
   }
 }

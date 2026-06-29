@@ -11,6 +11,7 @@ import { AppModule } from './../src/app.module';
  * 2. Auth endpoints (/auth/*) are limited to 5 req/15min
  * 3. HTTP 429 is returned when limits are exceeded
  * 4. User-ID based tracking works correctly (not IP-based)
+ * 5. Rate limit error responses include retryAfter, resetTime, and endpoint info (#1089)
  */
 describe('Throttler Guard (e2e)', () => {
   let app: INestApplication;
@@ -51,6 +52,26 @@ describe('Throttler Guard (e2e)', () => {
         authNonceUrl,
       );
       expect(limitExceededResponse.status).toBe(429);
+    });
+
+    /**
+     * Test: Verify rate limit error response includes required fields (#1089)
+     */
+    it('should return rate limit error with retryAfter and resetTime', async () => {
+      const authNonceUrl =
+        '/auth/nonce?publicKey=GABC12345678901234567890123456789012345678901234';
+
+      // Make many rapid requests to trigger rate limit
+      for (let i = 0; i < 20; i++) {
+        await request(app.getHttpServer()).get(authNonceUrl);
+      }
+
+      const response = await request(app.getHttpServer()).get(authNonceUrl);
+
+      expect(response.status).toBe(429);
+      expect(response.body).toHaveProperty('retryAfter');
+      expect(response.body).toHaveProperty('resetTime');
+      expect(response.body).toHaveProperty('endpoint');
     });
   });
 
@@ -113,13 +134,15 @@ describe('Throttler Guard (e2e)', () => {
     /**
      * Test: Verify that rate limit information is included in response headers
      */
-    it('should include rate-limit related headers in response', async () => {
+    it('should include X-RateLimit-Limit and X-RateLimit-Tier headers in response', async () => {
       const response = await request(app.getHttpServer()).get(
         '/test-throttling',
       );
 
       // The response should include throttle-related information
       expect(response.status).toBe(200);
+      expect(response.headers).toHaveProperty('x-ratelimit-limit');
+      expect(response.headers).toHaveProperty('x-ratelimit-tier');
     });
   });
 });

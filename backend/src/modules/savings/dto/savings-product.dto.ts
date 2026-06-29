@@ -5,69 +5,67 @@ import {
 } from '../entities/savings-product.entity';
 
 export class SavingsProductDto {
-  @ApiProperty({ description: 'Product UUID' })
+  @ApiProperty({ example: 'prod-123456', description: 'Product UUID' })
   id: string;
 
-  @ApiProperty({ description: 'Product name' })
+  @ApiProperty({ example: 'Flexi Savings', description: 'Product name' })
   name: string;
 
-  @ApiProperty({ enum: SavingsProductType, description: 'Product type' })
+  @ApiProperty({ enum: SavingsProductType, example: SavingsProductType.FLEXI, description: 'Product type' })
   type: SavingsProductType;
 
-  @ApiPropertyOptional({ description: 'Product description' })
+  @ApiPropertyOptional({ example: 'Flexible savings with no lock period', description: 'Product description' })
   description: string | null;
 
-  @ApiProperty({ description: 'Annual interest rate (%)' })
+  @ApiProperty({ example: 8.5, description: 'Annual interest rate (%)' })
   interestRate: number;
 
-  @ApiProperty({ description: 'Minimum subscription amount' })
+  @ApiProperty({ example: 10, description: 'Minimum subscription amount' })
   minAmount: number;
 
-  @ApiProperty({ description: 'Maximum subscription amount' })
+  @ApiProperty({ example: 100000, description: 'Maximum subscription amount' })
   maxAmount: number;
 
-  @ApiPropertyOptional({ description: 'Tenure in months' })
+  @ApiPropertyOptional({ example: 3, description: 'Tenure in months' })
   tenureMonths: number | null;
 
-  @ApiPropertyOptional({ description: 'Soroban vault contract ID' })
+  @ApiPropertyOptional({ example: 'CAENV...contract-id', description: 'Soroban vault contract ID' })
   contractId: string | null;
 
-  @ApiProperty({ description: 'Whether product is active' })
+  @ApiProperty({ example: true, description: 'Whether product is active' })
   isActive: boolean;
 
-  @ApiPropertyOptional({
-    description: 'Maximum active subscriptions allowed per user',
-  })
+  @ApiPropertyOptional({ example: 5, description: 'Maximum active subscriptions allowed per user' })
   maxSubscriptionsPerUser: number | null;
-  @ApiProperty({ description: 'Current product version' })
+
+  @ApiProperty({ example: 1, description: 'Current product version' })
   version: number;
 
   @ApiProperty({
     description: 'Risk level classification (e.g. Low, Medium, High)',
     enum: RiskLevel,
+    example: RiskLevel.LOW,
   })
   riskLevel: RiskLevel;
 
-  @ApiProperty({ description: 'Total Value Locked (aggregated local balance)' })
+  @ApiProperty({ example: 5000000, description: 'Total Value Locked (aggregated local balance)' })
   tvlAmount: number;
 
-  @ApiPropertyOptional({
-    description: 'Maximum liquidity-backed capacity for the product',
-  })
+  @ApiPropertyOptional({ example: 10000000, description: 'Maximum liquidity-backed capacity for the product' })
   maxCapacity: number | null;
 
-  @ApiProperty({ description: 'Current utilized capacity amount' })
+  @ApiProperty({ example: 2500000, description: 'Current utilized capacity amount' })
   utilizedCapacity: number;
 
-  @ApiProperty({ description: 'Remaining capacity amount' })
+  @ApiProperty({ example: 7500000, description: 'Remaining capacity amount' })
   availableCapacity: number;
 
-  @ApiProperty({ description: 'Capacity utilization percentage' })
+  @ApiProperty({ example: 50, description: 'Capacity utilization percentage' })
   utilizationPercentage: number;
 
-  @ApiProperty({ description: 'Product creation timestamp' })
+  @ApiProperty({ example: '2026-01-15T10:30:00.000Z', description: 'Product creation timestamp' })
   createdAt: Date;
 
-  @ApiProperty({ description: 'Product last update timestamp' })
+  @ApiProperty({ example: '2026-01-20T14:45:00.000Z', description: 'Product last update timestamp' })
   updatedAt: Date;
 }
