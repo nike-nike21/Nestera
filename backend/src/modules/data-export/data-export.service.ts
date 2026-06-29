@@ -123,17 +123,33 @@ export class DataExportService {
 
   async getExportFile(token: string): Promise<{ filePath: string; userId: string }> {
     const request = await this.exportRepository.findOne({ where: { token } });
+
     if (!request || request.status !== ExportStatus.READY) {
       throw new NotFoundException('Export not found or not ready');
     }
+
+    // Ownership enforcement
+    if (request.userId !== userId) {
+      throw new NotFoundException('Export not found or not ready');
+    }
+
     if (request.expiresAt && request.expiresAt < new Date()) {
       await this.markExpiredAndCleanup(request.id, 'Export link expired');
       throw new BadRequestException('Export link has expired');
     }
+
     if (!request.filePath || !fs.existsSync(request.filePath)) {
       throw new NotFoundException('Export file not found');
     }
-    return { filePath: request.filePath, userId: request.userId };
+
+    // Path validation: ensure resolved path remains inside EXPORT_DIR.
+    const resolved = path.resolve(request.filePath);
+    const exportDirResolved = path.resolve(EXPORT_DIR);
+    if (!resolved.startsWith(exportDirResolved + path.sep)) {
+      throw new BadRequestException('Export file path is invalid');
+    }
+
+    return { filePath: resolved, userId: request.userId };
   }
 
   async getExportStatus(requestId: string, userId: string) {
